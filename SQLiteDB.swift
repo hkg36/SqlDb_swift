@@ -148,28 +148,12 @@ let SQLITE_DATE = SQLITE_NULL + 1
 
 // MARK:- SQLiteDB Class - Does all the work
 @objc class SQLiteDB {
-	let DB_NAME = "data.db"
 	let QUEUE_LABLE = "SQLiteDB"
 	var db:COpaquePointer = nil
 	var queue:dispatch_queue_t
 	var fmt = NSDateFormatter()
-	
-	struct Static {
-		static var instance:SQLiteDB? = nil
-		static var token:dispatch_once_t = 0
-	}
-	
-	class func sharedInstance() -> SQLiteDB! {
-		dispatch_once(&Static.token) {
-//			println("SQLiteDB - Dispatch once")
-			Static.instance = self()
-		}
-		return Static.instance!
-	}
  
-	required init() {
-//		println("SQLiteDB - Init method")
-		assert(Static.instance == nil, "Singleton already initialized!")
+    required init(DB_NAME:String) {
 		// Set queue
 		queue = dispatch_queue_create(QUEUE_LABLE, nil)
 		// Get path to DB in Documents directory
@@ -198,6 +182,7 @@ let SQLITE_DATE = SQLITE_NULL + 1
 			sqlite3_close(db)
 		}
 		fmt.dateFormat = "YYYY-MM-dd HH:mm:ss"
+        fmt.timeZone=NSTimeZone(forSecondsFromGMT: 0)
 	}
 	
 	deinit {
@@ -259,19 +244,7 @@ let SQLITE_DATE = SQLITE_NULL + 1
 	
 	// Show alert with either supplied message or last error
 	func alert(msg:String) {
-		dispatch_async(dispatch_get_main_queue()) {
-#if os(iOS)
-			let alert = UIAlertView(title: "SQLiteDB", message:msg, delegate: nil, cancelButtonTitle: "OK")
-			alert.show()
-			#else
-			let alert = NSAlert()
-			alert.addButtonWithTitle("Ok")
-			alert.messageText = "SQLiteDB"
-			alert.informativeText = msg
-			alert.alertStyle = NSAlertStyle.WarningAlertStyle
-			alert.runModal()
-#endif
-		}
+		
 	}
 	
 	// Private method which prepares the SQL
